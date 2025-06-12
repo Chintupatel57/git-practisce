@@ -1,0 +1,96 @@
+Hosting Resume on AWS EC2
+   # Process steps starts from 01 and continue on....
+ 
+     01- Create an EC2 Instance
+        * Instance name - Hostingresume-01
+        * Create a new key pair (.pem ) save in a particular palce
+        * REMAINING ALL DEFULT - CHANGE ACCORDING TO YOUR PROJECT ( OPTIONAL )
+         --Lunch instacne....
+   
+     02- Open your GitHub
+        * Upload resume in index.html format
+        * Upload style.css file ( Avalable in my git )
+        * And Add readme.md 
+        -- Create secret repository
+          --> In you git homepage go-to settings --> Secrets and varaibles --> Actions -->
+              Create Four secret repositories 
+               -01 Name - EC2_SSH_KEY
+                   Secret - Open your ec2 keypair in visual studio and copy the text and paste in the
+                            Secret box and click on add repository
+               -02 Name - HOST_DNS
+                   Secret - Copy the public ipv4 address and  paste in the
+                            Secret box and click on add repository
+               -03 Name - USERNAME
+                   Secret - Give the name of your ec2 virtual machine name like ( Linux, Ubuntu, etc....) in the
+                            Secret box and click on add repository
+ 
+               -04 Name - TARGET_DIR
+                   secret - Write the word "home" in the Secret box and click on add repository
+            
+       03- Create the workflow
+          * In your git home page add Create file 
+            --> github/workflows/github-actions-ec2.yml add this name to your file name 
+            --> Add this code in next box which is next to your file name
+               name: Push-to-EC2
+
+# Trigger deployment only on push to main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to EC2 on master branch push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the files
+        uses: actions/checkout@v2
+
+      - name: Deploy to Server 1
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.HOST_DNS }}
+          REMOTE_USER: ${{ secrets.USERNAME }}
+          TARGET: ${{ secrets.TARGET_DIR }}
+
+      - name: Executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_DNS }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo apt-get -y update
+            sudo apt-get install -y apache2
+            sudo systemctl start apache2
+            sudo systemctl enable apache2
+            cd home
+            sudo mv * /var/www/html
+            
+           ( And click on commit changes )
+         And then go to your home page and and open actions section there you can see your workflow
+          - That workflow is in "Yellow" colour it is "running"
+          - That workflow is in "Green" colour it is "Success"
+          - That workflow is in "Red" colour it is "failed"
+            ( make sure you have done all the steps in right way )
+     
+      04- Testing
+         * When your workflow is in Green colour Go-to your EC2 and copy the ipv4 public address
+           and open any browser and run the url. There you can see the resume which we hosted in EC2.
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
